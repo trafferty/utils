@@ -8,10 +8,6 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
-import time
-import operator
-from collections import defaultdict
-from collections import OrderedDict
 
 def parseXfdLog(xfdLog, output_path, generic=False):
     '''
@@ -98,12 +94,20 @@ def parseXfdLog(xfdLog, output_path, generic=False):
         time_delta = end_ts-start_ts
         delta_ms = time_delta.total_seconds() * 1000
         processing_times_nocombo.append(delta_ms)
-        
+    
+    processing_times_combo_np = np.array(processing_times_combo)
+    processing_times_nocombo_np = np.array(processing_times_nocombo)
+    
     fig = plt.figure(figsize=(10*2,5))
     if len(processing_times_combo) > 0:
-        plt.plot(processing_times_combo, label='Combo Funcs')
+        plt.plot(processing_times_combo, color='b', label='Combo Funcs')
+        plt.hlines(processing_times_combo_np.mean(), 0, len(processing_times_combo), color='r', linewidth=2, linestyle='--')
+        plt.text(len(processing_times_combo)+10, processing_times_combo_np.mean(), ("mean=%.f" % (np.round(processing_times_combo_np.mean()))), fontsize=18)
     if len(processing_times_nocombo) > 0:
-        plt.plot(processing_times_nocombo, label='No Combo Funcs')
+        plt.plot(processing_times_nocombo, color='g', label='No Combo Funcs')
+        plt.hlines(processing_times_nocombo_np.mean(), 0, len(processing_times_nocombo), color='r', linewidth=2, linestyle='--')
+        plt.text(len(processing_times_nocombo)+10, processing_times_nocombo_np.mean(), ("mean=%.f" % (np.round(processing_times_nocombo_np.mean()))), fontsize=18)
+    plt.ylabel('time (ms)')
     plt.title('Combo vs Non-Combo')
     plt.legend()
     plt.show()
