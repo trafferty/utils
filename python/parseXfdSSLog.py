@@ -85,7 +85,7 @@ def parseXfdSSLog(xfdLog, output_path, generic=False):
         plt.ylabel('time (ms)')
         plt.title('EnablePrintMode call timing')
         plt.legend()
-        plt.show()
+    plt.show()
 
 if __name__ == "__main__":
     '''
