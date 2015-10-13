@@ -12,11 +12,11 @@ def read_socket():
         time.sleep(.01)
 
 
-_thread = threading.Thread(target=read_socket)
-_thread.setDaemon(1)
-_thread.start()
+worker = threading.Thread(target=read_socket)
+worker.setDaemon(1)
+worker.start()
 
-cmd_lst = ['{"method":"start"}\n', '{"method":"end"}\n']
+cmd_lst = ['{"method":"start"}\n', '{"method":"stop"}\n']
 
 cmd_num = 0
 iter_cnt = 0
