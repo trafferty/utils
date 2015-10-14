@@ -19,10 +19,11 @@ class ImgAPO_GUI(Gtk.Window):
         window = builder.get_object("main_window")
 
         handlers = {
-            "gtk_main_quit"  : Gtk.main_quit,
-            "btnQuit_clicked" : Gtk.main_quit,
+            "gtk_main_quit"   : Gtk.main_quit,
             "btnStart_clicked": self.btnStart_clicked,
-            "btnStop_clicked" : self.btnStop_clicked
+            "btnStop_clicked" : self.btnStop_clicked,
+            "btnLoop_clicked" : self.btnLoop_clicked,
+            "btnQuit_clicked" : Gtk.main_quit
         }
         builder.connect_signals(handlers)
 
@@ -51,3 +52,6 @@ class ImgAPO_GUI(Gtk.Window):
 
     def btnStop_clicked(self, widget):
         self.sendCallback( dict(event='stop') )
+
+    def btnLoop_clicked(self, widget):
+        self.sendCallback( dict(event='loop') )
