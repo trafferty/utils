@@ -24,7 +24,7 @@ def parseSSLog(ss_log, output_path, generic=False):
     re.findall(p, test_str)
     '''
         
-    SSCalls_pattern=ur'../../15\ (?P<start_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] Calling (?P<func_name>[a-zA-Z]*).*?\n../../15\ (?P<end_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] [Call(s)]* success!'
+    SSCalls_pattern=ur'../../15\ (?P<start_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] Calling (?P<func_name>[a-zA-Z]*).*?\n../../15\ (?P<end_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] [Call(s)]* success'
 
     f = open(ss_log, 'r')
     buf = f.read()
@@ -49,8 +49,9 @@ def parseSSLog(ss_log, output_path, generic=False):
         func_name= SSCalls_set['func_name']
         end_ts   = dt.datetime.strptime(SSCalls_set['end_ts'], timestamp_format)
         time_delta = end_ts-start_ts
-        delta_ms = time_delta.total_seconds() * 1000
-        if delta_ms == 0: delta_ms = 0.5
+        delta_ms = float(time_delta.total_seconds() * 1000.0)
+        if delta_ms <= 0:
+            delta_ms = 0.5
         processing_times_SSCalls.append( (func_name, delta_ms) )
     
     if len(processing_times_SSCalls) == 0:
@@ -73,13 +74,13 @@ def parseSSLog(ss_log, output_path, generic=False):
         func_metrics[k].append( deltas_np.min() )
         func_metrics[k].append( deltas_np.mean() )
 
-    print "%s-------------------------------------------------------------------------------------------------%s" % (WHITE, RESET)
-    print "%s Scorpion                                                     Sample     Max      Min      Mean  %s" % (WHITE, RESET)
-    print "%s func                                                         cnt        (ms)     (ms)     (ms)  %s" % (WHITE, RESET)
-    print "%s-------------------------------------------------------------------------------------------------%s" % (WHITE, RESET)
+    print "%s---------------------------------------------------------------------------------------------------%s" % (WHITE, RESET)
+    print "%s Scorpion                                                     Sample       Max      Min      Mean  %s" % (WHITE, RESET)
+    print "%s Func name                                                     Count      (ms)     (ms)      (ms)  %s" % (WHITE, RESET)
+    print "%s---------------------------------------------------------------------------------------------------%s" % (WHITE, RESET)
     idx = 0
     for k in func_metrics.keys():
-        print("%s%-60s  %-9d  %-7d  %-7d  %-7d %s" % 
+        print("%s%-57s  %9d   %7.1f  %7.1f   %7.1f %s" % 
             (PrintColors[idx%2], k, func_metrics[k][0], func_metrics[k][1], func_metrics[k][2], func_metrics[k][3],
              RESET))
         idx+=1
