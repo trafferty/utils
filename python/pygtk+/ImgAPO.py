@@ -55,8 +55,8 @@ class ImgAPOEventProcessor(GUIEventProcessor):
             self.looping = False
             self.alive = False
             self.state = STOPPED
-            self.socketRead_thread.join()
-            self.loop_thread.join()
+            #self.socketRead_thread.join()
+            #self.loop_thread.join()
 
         else:
             self.doLog('Error! Unsupported event: ', cb_dict['event'])
