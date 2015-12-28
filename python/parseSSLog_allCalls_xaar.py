@@ -32,7 +32,7 @@ def parseSSLog(ss_log):
     f.close()
     print "File (%s) opened and read into buffer, length of buf: %d" % (ss_log, len(buf))
 
-    SSCalls_pattern=ur'../../15\ (?P<start_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] Calling (?P<func_name>[a-zA-Z]*).*?\n../../15\ (?P<end_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] [Call(s)]* success'
+    SSCalls_pattern=ur'../../1[56]\ (?P<start_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] Calling (?P<func_name>[a-zA-Z]*).*?\n../../1[56]\ (?P<end_ts>[0-9:.]*): \(XaarCmdAPI      \) \[DEBUG\] [Call(s)]* success'
     SSCalls_sets = [x.groupdict() for x in re.finditer(SSCalls_pattern, buf, re.DOTALL)]
     print "Parsing log for SSCalls calls...found %d records." % (len(SSCalls_sets))
 
@@ -84,7 +84,7 @@ def parseSSLog(ss_log):
     print " Func name                                                     Count      (ms)     (ms)      (ms)      (ms)    "
     print "---------------------------------------------------------------------------------------------------------------"
     for k in func_metrics_ordered.keys():
-        print("%-57s  %9d   %7.1f  %7.1f   %7.1f   %7.1f" % 
+        print("%-57s  %9d   %7.1f  %7.1f   %7.1f   %7.1f" %
             (k, func_metrics_ordered[k][0], func_metrics_ordered[k][1], func_metrics_ordered[k][2],
              func_metrics_ordered[k][3], func_metrics_ordered[k][4]))
 
