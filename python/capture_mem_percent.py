@@ -6,9 +6,12 @@ requires psutil:
 
   pip install psutil
 
+Usage:
+
+  ./capture_mem_percent.py -n process_name -w 1 -v | tee -a /tmp/mem_per_log
+  
 '''
 import argparse
-import signal
 import time
 import psutil
 
@@ -19,21 +22,17 @@ def find_pid(process_name):
     return -1
 
 if __name__ == '__main__':
-    done = False
-    def sigint_handler(signal, frame):
-        print( "\nCaught Ctrl-c...")
-        done = True
-    signal.signal(signal.SIGINT, sigint_handler)
-
     parser = argparse.ArgumentParser(description='Capture process info')
     parser.add_argument('-n', '--process_name', type=str, help='name of the process', required=True)
-    parser.add_argument('-w', '--wait_time_s', type=int, default=10, help='wait time in seconds (def=10s)', required=True)
+    parser.add_argument('-w', '--wait_time_s', type=int, default=10, help='wait time in seconds (def=10s)', required=False)
+    parser.add_argument('-v', dest='verbose', action='store_true', default=False)
     args = parser.parse_args()
 
     pid = find_pid(args.process_name)
     if pid >=0:
         p = psutil.Process(pid)
-        while not done:
-            memory_percent = p.memory_percent()
-            print(memory_percent)
-            time.sleep(args.wait_time_s)
+        while True:
+            if args.verbose:
+                print(("%s, %.6f, %.2f" %(time.strftime('%a %H:%M:%S'), p.memory_percent(), p.cpu_percent(interval=args.wait_time_s))), flush=True)
+            else:
+                print(("%.6f, %.2f" %(p.memory_percent(), p.cpu_percent(interval=args.wait_time_s))), flush=True)
