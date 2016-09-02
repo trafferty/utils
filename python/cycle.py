@@ -10,8 +10,10 @@ def cycle(n, f):
     GPIO.output("CSID0", 0)
     for x in range(n+1):
         GPIO.output("CSID0", 1)
+        GPIO.output("CSID1", 1)
         time.sleep(t/2.0)
         GPIO.output("CSID0", 0)
+        GPIO.output("CSID1", 0)
         time.sleep(t/2.0)
         print("...cycle complete: %d" % (x))
 
@@ -26,4 +28,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     GPIO.setup("CSID0", GPIO.OUT)
+    GPIO.setup("CSID1", GPIO.OUT)
     cycle(args.num_cycles, args.freq)
