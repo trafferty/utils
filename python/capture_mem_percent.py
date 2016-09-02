@@ -9,7 +9,7 @@ requires psutil:
 Usage:
 
   ./capture_mem_percent.py -n process_name -w 1 -v | tee -a /tmp/mem_per_log
-  
+
 '''
 import argparse
 import time
@@ -31,8 +31,19 @@ if __name__ == '__main__':
     pid = find_pid(args.process_name)
     if pid >=0:
         p = psutil.Process(pid)
+        cnt = 0
         while True:
             if args.verbose:
-                print(("%s, %.6f, %.2f" %(time.strftime('%a %H:%M:%S'), p.memory_percent(), p.cpu_percent(interval=args.wait_time_s))), flush=True)
+                print(("%s, %.6f, %.2f, %.2f" %
+                     (time.strftime('%a %H:%M:%S'),
+                     p.memory_percent(),
+                     p.cpu_percent(interval=args.wait_time_s),
+                     psutil.virtual_memory()[2])), flush=True)
             else:
-                print(("%.6f, %.2f" %(p.memory_percent(), p.cpu_percent(interval=args.wait_time_s))), flush=True)
+                print(("%.6f, %.2f, %.2f" %
+                (p.memory_percent(),
+                p.cpu_percent(interval=args.wait_time_s),
+                psutil.virtual_memory()[2])), flush=True)
+            cnt += 1
+            if cnt % 10 == 0:
+                print(psutil.test(), flush=True)
