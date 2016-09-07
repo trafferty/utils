@@ -24,8 +24,8 @@ def cycle(num_loops, loop_time_s, num_cycles, freq):
             time.sleep(time_between_cycles/2.0)
             doLog("  ...cycle complete: %d" % (cycle_cnt))
         doLog("...loop complete: %d" % (loop_cnt))
-        while ((time.time() - start_ts) < loop_time_s):
-            time.sleep(0.005)
+        while ((time.time() - start_ts) < (loop_time_s-0.002)):
+            time.sleep(0.004)
 
 if __name__ == "__main__":
     '''

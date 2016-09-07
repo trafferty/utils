@@ -4,7 +4,7 @@ import time
 import argparse
 import CHIP_IO.GPIO as GPIO
 
-def cycle(n, f):
+def blink(n, f):
     t = (1.0/f) / 2.0
     GPIO.output("CSID0", 0)
     for x in range(n+1):
