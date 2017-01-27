@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 import sys
-import time
+import os
 import re
 import argparse
 import json
@@ -27,9 +27,9 @@ def parseXfdLog(xfdLog, results_dict):
     serial_num_matches = re.finditer(serial_num_pattern, buf, re.MULTILINE)
     dispense_event_matches = re.finditer(dispense_event_pattern, buf, re.MULTILINE)
 
-    serial_num = 'unknown'
+    serial_num = 'S/N: unknown'
     for match in serial_num_matches:
-        serial_num = match.groupdict()['serial_num']
+        serial_num = "S/N: %s" % (match.groupdict()['serial_num'])
         print("XFD started on %s at %s with dispenser serial num: %s..." % (match.groupdict()['date_XFD_started'], match.groupdict()['time_XFD_started'], serial_num))
 
     print("Starting search for dispenses for serial num: %s" % (serial_num))
@@ -42,11 +42,11 @@ def parseXfdLog(xfdLog, results_dict):
         
         if serial_num not in results_dict[year]:
             results_dict[year][serial_num]={}
-            results_dict[year][serial_num]['count'] = 0
-            results_dict[year][serial_num]['dates']= set() 
+            results_dict[year][serial_num]['dispense count'] = 0
+            results_dict[year][serial_num]['dispense dates']= set() 
 
-        results_dict[year][serial_num]['count'] += 1
-        results_dict[year][serial_num]['dates'].add(match.groupdict()['date_dispensed'])
+        results_dict[year][serial_num]['dispense count'] += 1
+        results_dict[year][serial_num]['dispense dates'].add(match.groupdict()['date_dispensed'])
 
         if serial_num is 'unknown':
             print( "  Unknown! Dispensed on %s at %s" % (match.groupdict()['date_dispensed'], match.groupdict()['time_dispensed']))
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.path_to_log_files:
-        glob_spec = "%s/xfd.log.%s*" % (args.path_to_log_files, args.year_of_interest)
+        glob_spec = "%s/xfd.log.%s*" % (os.path.abspath(args.path_to_log_files), args.year_of_interest)
         log_files = sorted(glob.glob(glob_spec))
     else:
         parser.print_help()
