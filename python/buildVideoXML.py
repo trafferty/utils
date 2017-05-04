@@ -2,7 +2,7 @@
 import os
 from os.path import join, getsize
 
-def addEntry (XMLFile, finfo, dirs, NASPath):
+def addEntry (XMLFile, videosDir, finfo, dirs, NASPath):
     #finfo[1].replace(' ', '_')
     finfo[1] = finfo[1].replace('.', '_', finfo.count('.')-1)
     title = finfo[1].split('.')[0]
@@ -10,10 +10,20 @@ def addEntry (XMLFile, finfo, dirs, NASPath):
     root = ''
     genre = 'Tom and Frederika'
     pathlist = finfo[0].split('/')
-    for pathchunk in pathlist:
-        for dirname in dirs:
-            if pathchunk == dirname:
-                genre = dirname
+    
+    if 0:
+        for pathchunk in pathlist:
+            for dirname in dirs:
+                if pathchunk == dirname:
+                    genre = dirname
+    else:
+        locs = finfo[0][len(videosDir)+1:]
+        if len(locs) > 0:
+            if locs.find('/') >= 0:
+                genre = "[%s]" % (locs)
+            else:
+                genre = "%s" % (locs)
+        print("finfo: %s, locs: %s, genre: %s" % (finfo[0], locs, genre))        
             
     imageRoot = ''
     for pathchunk in pathlist:
@@ -57,9 +67,9 @@ print 'Reading in files from ' + videosDir;
 for root, dirs, files in os.walk(videosDir):
     for dirname in dirs:
         allDirs.append(dirname)
-    for name in files:
-        if (name.find('mp4') > -1 or name.find('MP4') > -1) and name.find('._') == -1:
-            allfiles.append([root, name, len(allfiles)])
+    for idx, file_name in enumerate(files):
+        if (file_name.find('mp4') > -1 or file_name.find('MP4') > -1) and file_name.find('._') == -1:
+            allfiles.append([root, file_name, idx])
 
 videoXMLFile = open(videoXMLFileName, 'w')
 videoXMLFile.write("<xml>\n")
@@ -76,7 +86,7 @@ for finfo in allfiles:
         NASPath = NASPath + pathchunk + "\\"
     NASPath = NASPath + finfo[1]
     #print NASPath + " - " + finfo[0] + "/" + finfo[1]
-    addEntry (videoXMLFile, finfo, allDirs, NASPath)
+    addEntry (videoXMLFile, videosDir, finfo, allDirs, NASPath)
 
 videoXMLFile.write("</viddb>\n")
 videoXMLFile.write("</xml>\n")  
