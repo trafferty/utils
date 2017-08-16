@@ -1,0 +1,103 @@
+How to add dissector
+
+1. First write the lua code.  see *_dissector.lua files or below section for examples.  
+
+2. Put the lua file in ~/wireshark folder
+
+3. Add an init.lua file in ~/.wireshark folder if it doesn't already exist
+
+4. Add line in init.lua to load dissector.  I.e.:
+    dofile(USER_DIR.."Toms_data_dissector.lua")
+
+   ... this will load file "Toms_data_dissector.lua" from USER_DIR (~/.wireshark)
+
+--------------------------------------------------------
+Basic Format Of Dissector code:
+
+    print("Loading Tom's dissector, version 1.2.3")
+
+    -- create a "protocol" for our tree
+    toms_proto = Proto("Toms","Toms Data","Toms Data Dissector")
+
+    -- create new fields.  this will be a field within the "dissection"
+    NewField1_F = ProtoField.string("toms.new_field1", "New Field 1 Label")
+    NewField2_F = ProtoField.string("toms.new_field2", "New Field 2 Label")
+
+    -- add our fields to the protocol (comma-separated)
+    ttm_proto.fields = { NewField1_F, NewField2_F }
+
+    -- then register toms_proto as a postdissector (could also be predissector)
+    register_postdissector(toms_proto)
+
+    -- Create and initialize any globals
+    local Cnt
+    local SerialNumber_prev
+    local TimeStamp_uSec_prev = {}
+    function ttm_proto.init ()
+        Cnt = -1
+        SerialNumber_prev = -1
+        TimeStamp_uSec_prev[0] = 0
+        TimeStamp_uSec_prev[1] = 0
+        TimeStamp_uSec_prev[2] = 0
+        TimeStamp_uSec_prev[3] = 0
+    end
+
+    function ttm_proto.dissector(buffer,pinfo,tree  )
+
+        -- Add logic to check for some condition which
+        -- defines when you want to "dissect" the data.
+        -- For example, here let's check the src ip address
+        -- and port, and only dissect if it is from 
+        -- "192.168.1.1:5500"
+
+        local udp_src = udp_src_f()
+        local ip_src = ip_src_f()
+        local src_address = ""
+
+        if udp_src then
+        src_address = tostring(ip_src) .. ":" .. tostring(udp_src)
+        end
+
+        if src == "192.168.1.1:5500" then
+            Cnt = Cnt + 1
+
+            -- Get what you need from the packet info
+            pinfo.cols.protocol = "TomsData"
+            local packetnum = pinfo.number
+            local ts = pinfo.rel_ts
+            local delta_ts = pinfo.delta_dis_ts
+
+            -- handy to define a value which is the number of bytes into the packet 
+            -- buffer which starts the data you are interested in.  I.e., for UDP 
+            -- packet, data bytes start at 42
+            local buffer_offset = 42
+
+            ptr = buffer_offset
+
+            -- grab 2 bytes from the buffer, assign to local var, then advance the ptr
+            local a_short = buffer:range(ptr, 2):int(); ptr = ptr + 2
+
+            -- grab next 4 bytes from the buffer, assign to local var, then advance the ptr
+            local a_long = buffer:range(ptr, 4):int(); ptr = ptr + 4
+
+            -- grab next 4 bytes from the buffer, little endian, assign to local var, then advance the ptr
+            local a_long_le = buffer:range(ptr, 4):le_uint(); ptr = ptr + 4
+
+            -- ...keep going until all data is obtained from buffer...
+
+            -- Now do something with the data
+            local sum = a_short + a_long
+
+            -- Create a branch off the wireshark GUI dissector tree
+            local toms_branch = tree:add(toms_proto,buffer(),"Toms Data ("..tostring(ts)..", "..tostring(delta_ts)..") ")
+
+            -- Add some fields to the new branch
+            toms_branch:add(NewField1_F, sum)
+            toms_branch:add(NewField2_F, a_long_le)
+
+            -- if you want, you can also modify the Info column on the wireshark GUI
+            pinfo.cols.info = string.format("[%d] %d %.3f", Cnt, sum, (a_long_le / 0.123))
+
+        end
+
+    end
