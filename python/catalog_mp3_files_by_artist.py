@@ -29,5 +29,5 @@ for mp3_file_path in mp3_file_paths:
 
 print("\nSearch complete. Found %d unique artists" % (len(MP3_artist_dict)))
 
-for artist, cnt in sorted(MP3_artist_dict.items()):
+for artist, cnt in sorted(MP3_artist_dict.items(), key=lambda kv: kv[1]):
     print("%30s: %d" % (artist, cnt))
