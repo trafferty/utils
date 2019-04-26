@@ -110,16 +110,17 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Server Socket class - Tester')
-    parser.add_argument('-p', '--port', type=int, default=12888, help='Port on localhost to use', required=False)
+    parser.add_argument('--port', type=int, default=12888, help='Port to use (def: 12888)', required=False)
+    parser.add_argument('--ip', type=str, default='localhost', help='IP address (def: localhost)', required=False)
     args = parser.parse_args()
 
     # create the server, use port passed in as arg
-    server = ThreadedTCPServer(('localhost', args.port), SocketRequestHandler)
+    server = ThreadedTCPServer((args.ip, args.port), SocketRequestHandler)
 
     # Start the server...
     server.start();
 
-    print("server started on localhost:%d.\nstarting process loop..." % (args.port))
+    print("server started on %s:%d.\nstarting process loop..." % (args.ip, args.port))
     while True:
         if not server.input_fifo.empty():
             input_line = server.input_fifo.get()
