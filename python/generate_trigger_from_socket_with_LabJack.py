@@ -8,10 +8,13 @@ from labjack import ljm
 import socket
 import signal
 
+from threaded_tcp_server import ThreadedTCPServer, SocketRequestHandler
+
 LOW,HIGH = 0,1
 
 def doLog(log_msg):
     print("%s: %s" % (datetime.now().strftime("%Y_%d_%m (%a) - %H:%M:%S.%f")[:-3], log_msg))
+
 
 if __name__ == "__main__":
     done = False
@@ -51,30 +54,35 @@ if __name__ == "__main__":
 
     pulse_time_s = 0.001
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((addr, port))
-    s.listen(10)
-    doLog('Waiting on addr:port %s:%d' % (addr,port))
-    conn, addr_conn = s.accept()
-    doLog('Recieved conn from %s' % (addr_conn[0]))
+    server = ThreadedTCPServer("LJ_server", (addr, port), SocketRequestHandler)
+    #server.setCallback(test_callback_func)
+    # Start the server...
+    server.start();
 
+    print("server started on %s:%d.\nstarting process loop..." % (addr, port))
     cnt = 0
     prev_ts = time.time()
     while not done:
-        d = conn.recv(5)
-        recv_ts = time.time()
-        if d[0:2] == 'go':
-            cnt += 1
-            delta = recv_ts - prev_ts
-            prev_ts = recv_ts
-            doLog("Rcv'd go! cnt: %d, delta: %0.3f" % (cnt, delta))
-            ljm.eWriteName(handle, trigger_name, HIGH)
-            ljm.eWriteName(handle, LED_name, HIGH)
-            time.sleep(pulse_time_s)
-            ljm.eWriteName(handle, trigger_name, LOW)
-            ljm.eWriteName(handle, LED_name, LOW)
-        elif d[0:1] == 'q':
-            break
+        if not server.input_fifo.empty():
+            input_line = server.input_fifo.get()
+            recv_ts = time.time()
+            if input_line[0:2] == 'go':
+                cnt += 1
+                delta = recv_ts - prev_ts
+                prev_ts = recv_ts
+                doLog("Rcv'd go! cnt: %d, delta: %0.3f" % (cnt, delta))
+                ljm.eWriteName(handle, trigger_name, HIGH)
+                ljm.eWriteName(handle, LED_name, HIGH)
+                time.sleep(pulse_time_s)
+                ljm.eWriteName(handle, trigger_name, LOW)
+                ljm.eWriteName(handle, LED_name, LOW)
+            elif input_line[0:1] == 'q':
+                break
+        else:
+            time.sleep(0.001)
+    print("rec'd quit cmd, stopping loop...")
 
-    io.cleanup()
-    s.close()
+    server.stop()
+    print("all shut down...")
+
+    ljm.close(handle)
