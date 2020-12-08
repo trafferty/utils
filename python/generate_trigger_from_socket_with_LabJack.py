@@ -67,15 +67,17 @@ if __name__ == "__main__":
             input_line = server.input_fifo.get()
             recv_ts = time.time()
             if input_line[0:2] == 'go':
-                cnt += 1
-                delta = recv_ts - prev_ts
-                prev_ts = recv_ts
-                doLog("Rcv'd go! cnt: %d, delta: %0.3f" % (cnt, delta))
+                # pulse the trigger and LED DOs high then low
                 ljm.eWriteName(handle, trigger_name, HIGH)
                 ljm.eWriteName(handle, LED_name, HIGH)
                 time.sleep(pulse_time_s)
                 ljm.eWriteName(handle, trigger_name, LOW)
                 ljm.eWriteName(handle, LED_name, LOW)
+                # accounting...
+                cnt += 1
+                delta = recv_ts - prev_ts
+                prev_ts = recv_ts
+                doLog("Rcv'd go! cnt: %d, delta: %0.3f" % (cnt, delta))
             elif input_line[0:1] == 'q':
                 break
         else:
