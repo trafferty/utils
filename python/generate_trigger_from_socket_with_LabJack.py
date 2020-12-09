@@ -63,8 +63,8 @@ if __name__ == "__main__":
     cnt = 0
     prev_ts = time.time()
     while not done:
-        if not server.input_fifo.empty():
-            input_line = server.input_fifo.get()
+        input_line = server.input_fifo.get()
+        if len(input_line) > 0:
             recv_ts = time.time()
             if input_line[0:2] == 'go':
                 # pulse the trigger and LED DOs high then low
@@ -80,8 +80,7 @@ if __name__ == "__main__":
                 doLog("Rcv'd go! cnt: %d, delta: %0.3f" % (cnt, delta))
             elif input_line[0:1] == 'q':
                 break
-        else:
-            time.sleep(0.001)
+
     doLog("rec'd quit cmd, stopping loop...")
 
     server.stop()
