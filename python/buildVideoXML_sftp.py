@@ -1,7 +1,10 @@
 #!/Library/Frameworks/Python.framework/Versions/Current/bin/python
 import os
-from os.path import join, getsize
+from os.path import join, getsize, split
 from random import randint
+import pysftp   #conda install pysftp
+import argparse
+from getpass import getpass
 
 def addEntry (XMLFile, finfo, dirs, NASPath):
     #finfo[1].replace(' ', '_')
@@ -46,19 +49,22 @@ def addEntry (XMLFile, finfo, dirs, NASPath):
     XMLFile.write("</movie>\n\n")
 #------ End of addEntry
 
-videosDir        = '/Volumes/Volume_1-1/media/videos'
-#videosDir        = './videos'
-videoXMLFileName = videosDir + '/videos.xml'
-NASRoot = "Y:\\media\\videos\\"
+if __name__ == '__main__':
+    NAS_pw = getpass("Enter NAS pw: ")
+    NAS_hostname='192.168.129.142'
+    NAS_user='traff_ss'
+    NAS_root='media/videos'
 
-allfiles = []
-allDirs = []
+    videoXMLFileName = 'videos.xml'
+    NASRoot = "Y:\\media\\videos\\"
 
-print('Reading in files from ' + videosDir)
-for root, dirs, files in os.walk(videosDir):
-    for dirname in dirs:
-        allDirs.append(dirname)
-    for name in files:
+    allfiles = []
+    allDirs = []
+
+    print('Reading in files from NAS at path: ' + NAS_root)
+    def store_files_name(fname):
+        #print(fname)
+        root, name = os.path.split(fname)
         if (name.find('mp4') > -1 or name.find('MP4') > -1) and name.find('._') == -1:
             allfiles.append([root, name, len(allfiles)])
         if (name.find('mkv') > -1 or name.find('MKV') > -1) and name.find('._') == -1:
@@ -66,25 +72,46 @@ for root, dirs, files in os.walk(videosDir):
         if (name.find('avi') > -1 or name.find('AVI') > -1) and name.find('._') == -1:
             allfiles.append([root, name, len(allfiles)])
 
-videoXMLFile = open(videoXMLFileName, 'w')
-videoXMLFile.write("<xml>\n")
-videoXMLFile.write("<viddb>\n")
-videoXMLFile.write("<movies>" + str(len(allfiles)) +"</movies>\n\n")
+    def store_dir_name(dir_name):
+        allDirs.append(os.path.split(dir_name)[-1])
 
-print('...read in ' + str(len(allfiles) + 1) + ' files')
-print('Building XML media file at ' + videoXMLFileName)
+    def store_other_file_type(other_file):
+        pass
 
-for finfo in allfiles:
-    pathlist = finfo[0].split('/')
-    NASPath = NASRoot
-    for pathchunk in pathlist[5:]:
-        NASPath = NASPath + pathchunk + "\\"
-    NASPath = NASPath + finfo[1]
-    #print NASPath + " - " + finfo[0] + "/" + finfo[1]
-    addEntry (videoXMLFile, finfo, allDirs, NASPath)
+    with pysftp.Connection(NAS_hostname, username=NAS_user, password=NAS_pw) as sftp:
+        sftp.walktree(NAS_root, store_files_name, store_dir_name, store_other_file_type)
+        sftp.close()
 
-videoXMLFile.write("</viddb>\n")
-videoXMLFile.write("</xml>\n")  
-videoXMLFile.close()
+    # print(allfiles[10:30])
+    # print(allDirs)
 
-print('Built XML media file for ' + str(len(allfiles) + 1) + ' movies')
+    videoXMLFile = open(videoXMLFileName, 'w')
+    videoXMLFile.write("<xml>\n")
+    videoXMLFile.write("<viddb>\n")
+    videoXMLFile.write("<movies>" + str(len(allfiles)) +"</movies>\n\n")
+
+    print('...read in ' + str(len(allfiles) + 1) + ' files')
+    print('Building XML media file at ' + videoXMLFileName)
+
+    for finfo in allfiles:
+        pathlist = finfo[0].split('/')
+        NASPath = NASRoot
+        for pathchunk in pathlist[-1:]:
+            NASPath = NASPath + pathchunk + "\\"
+        NASPath = NASPath + finfo[1]
+        #print NASPath + " - " + finfo[0] + "/" + finfo[1]
+        addEntry (videoXMLFile, finfo, allDirs, NASPath)
+
+    videoXMLFile.write("</viddb>\n")
+    videoXMLFile.write("</xml>\n")  
+    videoXMLFile.close()
+
+    print('Built XML media file for ' + str(len(allfiles) + 1) + ' movies')
+    print('Now copying to NAS at: ', NAS_root)
+
+    cnopts = pysftp.CnOpts()
+    cnopts.hostkeys = None  
+
+    with pysftp.Connection(NAS_hostname, username=NAS_user, password=NAS_pw, cnopts=cnopts) as sftp:
+        sftp.put(videoXMLFileName,f"{NAS_root}/{videoXMLFileName}")  
+        sftp.close()
