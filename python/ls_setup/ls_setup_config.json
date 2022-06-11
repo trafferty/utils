@@ -1,0 +1,50 @@
+{
+    "start_loc_mm": 0.0,
+    "end_loc_mm": 25.0,
+    "PWM_start_delay_s": 0.01,
+
+    "SeqLength_mm": 20,
+    "PageLength_Ln": 120,
+    "ScanVel_mmps": 300,
+
+    "stage_accel_counts_per_sec2": 500000,
+
+    "copley_mc":
+    {
+        "debug": true,
+        "port": "/dev/tty.usbserial-21140",
+        "baudrate": 115200,
+        "resp_delay_s": 0.020,
+        "counts_per_micron": 20,
+        "default_max_velocity": 10000000,
+        "default_max_accel": 50000,
+        "waitPollingTime_s": 0.01,
+        "axis_list": ["a"],
+        "limits_mm": [
+            [
+                -25.0,
+                25.0
+            ]
+        ]
+    },
+
+    "lj_pwm": {
+        "freq_MHz": 200,
+        "time_s": 200
+    },
+
+    "imgAPO": {
+        "ipAddress": "127.0.0.1",
+        "port": 12070,
+        "auto_connect": false,
+        "active_cam_idx": 0
+    },
+
+    "labjack": {
+        "LED_name": "FI06",
+        "PWM_DIO_num": 7,
+
+        "freq_MHz": 0.030,
+        "PWM_time_s": 1.0
+    }
+}
