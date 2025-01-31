@@ -120,10 +120,12 @@ def main():
             "lj_device": "T4",
             "lj_conn": "ANY",
             "lj_id": "ANY",
+            "LED_name": "FIO6",
+            "PWM_DIO_num": 7
         }
 
-    LED_name = "FIO6"
-    PWM_DIO_num = 7
+    LED_name = config["LED_name"]
+    PWM_DIO_num = config["PWM_DIO_num"]
 
     lj = LabJackDriver(config)
 

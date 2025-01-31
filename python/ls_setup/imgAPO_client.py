@@ -96,31 +96,36 @@ class ImgAPO_client:
             self.client.stop()
 
     def select_target(self, target_name):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "IP",  "method": "select_target", "target_name": target_name, "buffer_type": "live", "cam_idx": self.active_cam_idx }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "IP",  "method": "select_target",
+                    "target_name": target_name, "buffer_type": "live", "cam_idx": self.active_cam_idx}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
 
     def check_targets(self):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "IP",  "method": "check_targets" }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "IP",
+                    "method": "check_targets"}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
 
     def reload_target_library(self):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "IP",  "method": "reload_target_library" }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "IP",
+                    "method": "reload_target_library"}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
 
     def locate_target(self, target_name):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "IP",  "method": "locate_target", "target_name": target_name, "buffer_type": "live", "cam_idx": self.active_cam_idx }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "IP",  "method": "locate_target",
+                    "target_name": target_name, "buffer_type": "live", "cam_idx": self.active_cam_idx}
         cmd_str = json.dumps(cmd_dict)
         self.locates_needed = 1
         self.locates_cnt = 0
 
     def save_image(self, image_filename, cmd_type="IP"):
-        cmd_dict = { "id": self.getCmdIdx(), "type": cmd_type,  "method": "save_image", "cam_idx": self.active_cam_idx, "image_filename": image_filename }
+        cmd_dict = {"id": self.getCmdIdx(), "type": cmd_type,  "method": "save_image",
+                    "cam_idx": self.active_cam_idx, "image_filename": image_filename}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         ret = self.send_msg(cmd_str)
@@ -144,25 +149,36 @@ class ImgAPO_client:
         self.send_msg(cmd_str)
 
     def smt_set_strategy(self, strategy_name):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "SMT",  "method": "set_smt_strategy", "strategy_name": strategy_name }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "SMT",
+                    "method": "set_smt_strategy", "strategy_name": strategy_name}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
 
     def bufferImg(self):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "NOTCH_PP",  "method": "buffer_current_image", "cam_idx": self.active_cam_idx }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "NOTCH_PP",
+                    "method": "buffer_current_image", "cam_idx": self.active_cam_idx}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
 
     def find_notch_pp_dist(self, imgBufferType):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "NOTCH_PP",  "method": "notch_pushpin_dist", "cam_idx": self.active_cam_idx, "buffer_type": imgBufferType }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "NOTCH_PP",  "method": "notch_pushpin_dist",
+                    "cam_idx": self.active_cam_idx, "buffer_type": imgBufferType}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
 
     def locate_notch(self, imgBufferType):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "NOTCH_PP",  "method": "locate_notch", "cam_idx": self.active_cam_idx, "buffer_type": imgBufferType }
+        cmd_dict = {"id": self.getCmdIdx(), "type": "NOTCH_PP",  "method": "locate_notch",
+                    "cam_idx": self.active_cam_idx, "buffer_type": imgBufferType}
+        cmd_str = json.dumps(cmd_dict)
+        logger.info(f"sending: {cmd_str}")
+        self.send_msg(cmd_str)
+
+    def setupDropDetection(self, SeqLength_mm, PageLength_Ln, ScanVel_mmps):
+        cmd_dict = {"id": self.getCmdIdx(), "type": "DD",  "method": "setupDD", "SeqLength_mm": SeqLength_mm,
+                    "PageLength_Ln": PageLength_Ln, "ScanVel_mmps": ScanVel_mmps}
         cmd_str = json.dumps(cmd_dict)
         logger.info(f"sending: {cmd_str}")
         self.send_msg(cmd_str)
@@ -174,15 +190,10 @@ class ImgAPO_client:
         self.cmd_idx += 1
         return self.cmd_idx
 
-    def setupDropDetection(self, SeqLength_mm, PageLength_Ln, ScanVel_mmps):
-        cmd_dict = { "id": self.getCmdIdx(), "type": "DD",  "method": "setupDD", "SeqLength_mm": SeqLength_mm, "PageLength_Ln": PageLength_Ln, "ScanVel_mmps":ScanVel_mmps }
-        cmd_str = json.dumps(cmd_dict)
-        logger.info(f"sending: {cmd_str}")
-        self.send_msg(cmd_str)
-
 def main():
     parser = argparse.ArgumentParser(description='Image APO GUI')
-    parser.add_argument('-i', '--ip_address', type=str, default='localhost:12070', help='IPAddress:Port to connect to (def: localhost:12070)', required=False)
+    parser.add_argument('-i', '--ip_address', type=str, default='localhost:12070',
+                        help='IPAddress:Port to connect to (def: localhost:12070)', required=False)
     args = parser.parse_args()
 
     ip, port = args.ip_address.split(':')

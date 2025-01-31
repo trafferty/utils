@@ -9,7 +9,6 @@ import json
 # from datetime import datetime
 import logging, logging.config
 from collections import deque
-
 import getch                   # pip install getch
 
 from Copley_motorController import CopleyMotorController
@@ -52,11 +51,9 @@ def main():
         'root': {'handlers': ['console'],'level': 'DEBUG'}
     }
     logging.config.dictConfig(LOGGING)
-
     logger = logging.getLogger("main")
 
     logger.info('Linescan setup started...')
-    logger.debug('>>>> Debug log level on...')
 
     logger.info("Creating Copley MC and starting initialization")
     mc = CopleyMotorController(config["copley_mc"])
@@ -71,10 +68,10 @@ def main():
         logger.error("Could not connect to imgAPO")
         sys.exit()
 
-    LED_name = config["labjack"]["LED_name"]
+    LED_name    = config["labjack"]["LED_name"]
     PWM_DIO_num = config["labjack"]["PWM_DIO_num"]
-    freq_MHz = config["labjack"]["freq_MHz"]
-    PWM_time_s = config["labjack"]["PWM_time_s"]
+    freq_MHz    = config["labjack"]["freq_MHz"]
+    PWM_time_s  = config["labjack"]["PWM_time_s"]
 
     lj = LabJackDriver(config)
 
@@ -83,7 +80,7 @@ def main():
         sys.exit()
 
     lj.setupDO(LED_name, True)
-    lj.setupPWM(PWM_DIO_num, args.freg_MHz)
+    lj.setupPWM(PWM_DIO_num, freq_MHz)
 
     start_loc_mm = config["start_loc_mm"]
     end_loc_mm = config["end_loc_mm"]
