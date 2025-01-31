@@ -7,6 +7,9 @@ import argparse
 from getpass import getpass
 
 def getVideoList(hostname, user, pw, path):
+    allFiles = []
+    allDirs = []
+
     def store_files_name(fname):
         #print(fname)
         root, name = os.path.split(fname)
@@ -22,8 +25,6 @@ def getVideoList(hostname, user, pw, path):
         pass
 
     print('Reading in files from NAS at path: ' + path)
-    allFiles = []
-    allDirs = []
     with pysftp.Connection(hostname, username=user, password=pw) as sftp:
         sftp.walktree(path, store_files_name, store_dir_name, do_nothing)
         sftp.close()
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     NAS_jpg_path = path='media/videos/images'
 
     videoXMLFileName = 'videos.xml'
-    NASRoot = "Y:\\media\\videos\\"
+    NASRoot = "Y:\\"
 
     allFiles, allDirs = getVideoList(NAS_hostname,NAS_user,NAS_pw,NAS_video_path)
     # print(allfiles[10:30])
@@ -103,10 +104,10 @@ if __name__ == '__main__':
     for finfo in allFiles:
         pathlist = finfo[0].split('/')
         NASPath = NASRoot
-        for pathchunk in pathlist[-1:]:
-            NASPath = NASPath + pathchunk + "\\"
+        for pathchunk in pathlist:
+            NASPath += pathchunk + "\\"
         NASPath = NASPath + finfo[1]
-        #print NASPath + " - " + finfo[0] + "/" + finfo[1]
+        #print( NASPath + " - " + finfo[0] + "/" + finfo[1])
         addEntry (videoXMLFile, finfo, allDirs, NASPath, jpg_cnt)
 
     videoXMLFile.write("</viddb>\n")
