@@ -5,24 +5,16 @@ import argparse
 import json
 import logging, logging.config
 
-LOGGING = { 'version': 1, 'disable_existing_loggers': False,
-    'formatters': { 'simple': { 'format': '%(asctime)s.%(msecs)03d [%(name)s] (%(levelname)s): %(message)s', "datefmt": "%Y-%m-%d %H:%M:%S"} },
-    'handlers': { 'console': {'class': 'logging.StreamHandler', 'level':'DEBUG', 'formatter': 'simple'} },
-    'root': {'handlers': ['console'],'level': 'DEBUG'}
-}
-logging.config.dictConfig(LOGGING)
-
-logger = logging.getLogger("PJ_MC")
-
 class PiezoJenaEDS2Controller:
     """ PiezoJena EDS2 Controller object"""
 
-    def __init__(self, config):
+    def __init__(self, config, logger):
         self.config = config
+        self.logger = logger
 
         self.debug = config["debug"]
         if not self.debug:
-            logger.setLevel(logging.INFO)
+            self.logger.setLevel(logging.INFO)
 
         self.resp_delay_s = config["resp_delay_s"] if "resp_delay_s" in config else 0.02
 
@@ -48,31 +40,34 @@ class PiezoJenaEDS2Controller:
         time.sleep(delaytime)
 
     def init(self):
-        logger.info("Initializing PJ MotorController")
+        self.logger.info("Initializing PJ MotorController")
 
-        logger.info(" >> Opening comm port")
+        self.logger.info(" >> Opening comm port")
         self.ser = serial.Serial(timeout=1)
         self.ser.port     = self.config['port']
         self.ser.baudrate = self.config['baudrate']
         self.ser.open()
         if not self.ser.is_open:
-            logger.info("Error: Could not open comm port! (port=", self.config['port'], ", baudrate=", self.config['baudrate'],")")
+            self.logger.info("Error: Could not open comm port! (port=", self.config['port'], ", baudrate=", self.config['baudrate'],")")
             return False
 
         ok, resp = self.sendCmd("ktemp\r")
         if not ok:
-            logger.error("Error sending ktemp cmd to controller")
+            self.logger.error("Error sending ktemp cmd to controller")
             return False
         
-        logger.info(f"Rcv'd: {resp}")
+        self.logger.info(f"Rcv'd: {resp}")
 
         return True
 
-    def setCmd(self, cmd):
-        ok, resp = self.sendCmd(f"{cmd}\r")
-        if not ok:
-            logger.error(f"Error sending cmd: {cmd}")
-            return False
+    # def sendCmd(self, cmd):
+    #     ok, resp = self.sendCmd(f"{cmd}\r")
+    #     if not ok:
+    #         self.logger.error(f"Error sending cmd: {cmd}")
+    #         return False
+    #     #self.logger.info(f"Rcv'd: {resp}")
+    #     return resp
+
 
 def main():
     # parser = argparse.ArgumentParser(description='Utility for testing Copley Motor Controller using Serial Interface')
@@ -86,6 +81,15 @@ def main():
     #     parser.print_help()
     #     sys.exit(1)
 
+    LOGGING = { 'version': 1, 'disable_existing_loggers': False,
+        'formatters': { 'simple': { 'format': '%(asctime)s.%(msecs)03d [%(name)s] (%(levelname)s): %(message)s', "datefmt": "%Y-%m-%d %H:%M:%S"} },
+        'handlers': { 'console': {'class': 'logging.StreamHandler', 'level':'DEBUG', 'formatter': 'simple'} },
+        'root': {'handlers': ['console'],'level': 'DEBUG'}
+    }
+    logging.config.dictConfig(LOGGING)
+
+    logger = logging.getLogger("PJ_MC")
+
     config = {
             "debug": True,
             "port" : '/dev/ttyUSB0',
@@ -94,13 +98,23 @@ def main():
             "limits_mm": [[-250.0, 250.0]]
         }
 
-    pj = PiezoJenaEDS2Controller(config)
+    pj = PiezoJenaEDS2Controller(config, logger)
 
     logger.info("MotorController started...starting initialization")
     if not pj.init():
         logger.error("Could not initialize Piezo Jena EDS2 Controller")
         sys.exit()
 
+    while True:
+        cmd = input(">>> ")
+        if cmd == 'q' or cmd == 'quit':
+            break
+        else:
+            logger.info(f"Sending cmd: {cmd}")
+            ok, resp = pj.sendCmd(f"{cmd}\r")
+            if not ok:
+                logger.error("Error sending cmd to controller")
+            logger.info(f"Rcv'd: {resp}")
 
     logger.info("Closing MotorController...")
     pj.close()
