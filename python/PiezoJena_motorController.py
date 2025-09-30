@@ -1,5 +1,6 @@
 import sys
-import serial
+#import serial
+from serial import Serial
 import time
 import argparse
 import json
@@ -78,11 +79,11 @@ class PiezoJenaEDS2Controller:
         notch_filter_enabled = (stat_reg >> self.notch_filter_enabled_shift) & self.notch_filter_enabled_mask
         low_pass_filter_enabled = (stat_reg >> self.low_pass_filter_enabled_shift) & self.low_pass_filter_enabled_mask
         print(f"For status register value {stat_reg}:")
-        print(f" Actuator plugged {('yes' if is_plugged else 'no')}")
+        print(f" Actuator plugged (detected): {('yes' if is_plugged else 'no')}")
         print(f" Actuator measurmenent type: {self.actuator_measurement_type_dict[actuator_measurement_type]}")
         print(f" Open loop system: {('yes' if open_loop_system else 'no')}")
         print(f" Piezo voltage enabled: {('yes' if piezo_voltage_enabled else 'no')}")
-        print(f" Open loop enabled: {('yes' if open_loop_enabled else 'no')}")
+        print(f" Closed loop enabled: {('yes' if open_loop_enabled else 'no')}")
         print(f" Generator type: {self.generator_type_dict[generator_type]}")
         print(f" Notch filter enabled: {('yes' if notch_filter_enabled else 'no')}")
         print(f" Low pass filter enabled: {('yes' if low_pass_filter_enabled else 'no')}")
@@ -108,7 +109,11 @@ class PiezoJenaEDS2Controller:
         ok, resp = self.sendCmd(f"{cmd}\r")
         if not ok:
             self.logger.error("Error sending cmd to controller")
-        self.decode_stat_reg(int(resp.split(',')[2]))
+        print(f"stat cmd returned: {resp}")
+        if len(resp.split(',')) == 3:
+            self.decode_stat_reg(int(resp.split(',')[2]))
+        elif resp.find('not present'):
+            print(f"Controller not present in slot {chan}")
 
     def close(self):
         self.ser.close()
@@ -119,8 +124,8 @@ class PiezoJenaEDS2Controller:
     def init(self):
         self.logger.info("Initializing PJ MotorController")
 
-        self.logger.info(" >> Opening comm port")
-        self.ser = serial.Serial(timeout=1)
+        self.logger.info(f" >> Opening comm port: {self.config['port']}")
+        self.ser = Serial(timeout=1)
         self.ser.port     = self.config['port']
         self.ser.baudrate = self.config['baudrate']
         self.ser.open()
@@ -147,16 +152,23 @@ class PiezoJenaEDS2Controller:
 
 
 def main():
-    # parser = argparse.ArgumentParser(description='Utility for testing Copley Motor Controller using Serial Interface')
-    # parser.add_argument("config_file_path", help='Full path to config file')
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(description='Utility for testing Piezo Jena EDS2 using Serial Interface')
+    parser.add_argument("config_file_path", help='Full path to config file')
+    args = parser.parse_args()
 
-    # if args.config_file_path:
-    #     with open(args.config_file_path) as config_file:
-    #         config = json.load(config_file)
-    # else:
-    #     parser.print_help()
-    #     sys.exit(1)
+    if args.config_file_path:
+        with open(args.config_file_path) as config_file:
+            config = json.load(config_file)
+    else:
+        print(f"Config file not found: {args.config_file_path}")
+        config = {
+                "debug": True,
+                "port" : '/dev/ttyUSB0',
+                "baudrate" : 115200,
+                "resp_delay_s": 0.020,
+                "limits_mm": [[-250.0, 250.0]]
+            }
+        print(f"Using default data: \n{config}")
 
     LOGGING = { 'version': 1, 'disable_existing_loggers': False,
         'formatters': { 'simple': { 'format': '%(asctime)s.%(msecs)03d [%(name)s] (%(levelname)s): %(message)s', "datefmt": "%Y-%m-%d %H:%M:%S"} },
@@ -166,14 +178,6 @@ def main():
     logging.config.dictConfig(LOGGING)
 
     logger = logging.getLogger("PJ_MC")
-
-    config = {
-            "debug": True,
-            "port" : '/dev/ttyUSB0',
-            "baudrate" : 115200,
-            "resp_delay_s": 0.020,
-            "limits_mm": [[-250.0, 250.0]]
-        }
 
     pj = PiezoJenaEDS2Controller(config, logger)
 

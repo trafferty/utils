@@ -1,0 +1,7 @@
+{
+    "debug": true,
+    "port" : "/dev/tty.usbserial-210",
+    "baudrate" : 115200,
+    "resp_delay_s": 0.020,
+    "limits_mm": [[-250.0, 250.0]]
+}
